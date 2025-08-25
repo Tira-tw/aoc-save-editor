@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Age of Calamity Save Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1f0f;
+      --bg2: #0a180c;
+      --card: rgba(0,0,0,0.28);
+      --text: #f5e6c5;
+      --gold: #d4af37;
+      --border: #9a7a2b;
+      --green: #2a503a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(to bottom, var(--bg), var(--bg2));
+      font-family: 'Cinzel', serif;
+      color: var(--text);
+      text-align: center;
+      padding: 40px;
+    }
+
+    #logo img {
+      max-width: 350px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,.6);
+      margin-bottom: 15px;
+    }
+
+    h1 {
+      font-size: 2.3em;
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(212,175,55,.7);
+      margin: 10px 0;
+    }
+
+    #titleBar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    #subtitle {
+      font-size: 1.1em;
+      margin-bottom: 25px;
+      color: var(--text);
+    }
+
+    #editor {
+      background: var(--card);
+      border: 2px solid var(--gold);
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,.6);
+      display: inline-block;
+      padding: 25px 40px;
+      min-width: 420px;
+      text-align: center;
+    }
+
+    #dropZone {
+      border: 2px dashed var(--gold);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 12px 0;
+      color: #f5e6c5;
+    }
+
+    /* 自訂按鈕樣式：取代預設的檔案選擇按鈕 */
+    #browseBtn {
+      background: #2a402a;
+      color: var(--text);
+      font-family: 'Cinzel', serif;
+      border: 2px solid var(--gold);
+      border-radius: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    #browseBtn:hover {
+      background: #3a503a;
+      transform: translateY(-1px);
+    }
+
+    /* 原生檔案 input 需要被完全隱藏，不要顯示瀏覽器自帶文字 */
+    #fileInput {
+      display: none;
+    }
+
+    #status {
+      font-family: sans-serif;
+      font-size: 0.95em;
+      color: #f0e6c5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(212,175,55,.3);
+    }
+
+    input[type="number"] {
+      width: 120px;
+      font-family: 'Cinzel', serif;
+      font-size: 1em;
+      padding: 6px;
+      border-radius: 8px;
+      border: 2px solid var(--gold);
+      background: #2a402a;
+      color: var(--text);
+      text-align: right;
+    }
+
+    button, select {
+      font-family: 'Cinzel', serif;
+      font-size: 1em;
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 2px solid var(--gold);
+      background: #2a402a;
+      color: var(--text);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    button:hover, select:hover { background: #3a503a; }
+
+    #github {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 25px;
+      padding: 8px 14px;
+      text-decoration: none;
+      background: #24292e;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9em;
+      transition: background 0.3s;
+    }
+    #github:hover { background: #333; }
+    #github svg { margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div id="logo">
+    <img src="https://sm.ign.com/ign_ap/review/h/hyrule-war/hyrule-warriors-age-of-calamity-review_xevr.jpg" alt="Logo" />
+  </div>
+
+  <div id="titleBar">
+    <h1 id="title">Hyrule Warriors Age of Calamity - Save Editor BETA</h1>
+    <select id="langSelect" aria-label="Language">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <div id="subtitle">Custom Save Modifier</div>
+
+  <div id="editor">
+    <div id="dropZone" title="Drag and drop a save file here (or use the picker)">
+      Please search for the svdt file and click "Select File" to select it.
+    </div>
+
+    <div id="fileRow" style="margin-top:8px;">
+      <!-- 自訂按鈕觸發檔案選取，真正的 <input> 會被隱藏 -->
+      <button id="browseBtn" type="button" aria-label="Browse for a save file">選擇檔案</button>
+      <input type="file" id="fileInput" />
+      <span id="status">No file selected.</span>
+    </div>
+
+    <table id="dataTable" style="display:none;">
+      <thead>
+        <tr>
+          <th id="colItem">Item</th>
+          <th id="colCurrent">Current</th>
+          <th id="colNew">Modify</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <button id="saveBtn" disabled>Download Modified Save</button>
+  </div>
+
+  <br>
+  <a id="github" href="https://github.com/Tira-tw/aoc-save-editor" target="_blank" aria-label="GitHub repository">
+    <svg height="20" width="20" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+        0-.74-.28-1.36-.7-1.84-.24-.38-.5-.48-.5-.48-.64-.44-.99-1.01-.99-1.01-.82-.56.07-.55.07-.55
+        0 .72.5 1.23 1.25 1.23.73 0 1.27-.52 1.27-1.22 0-.68-.46-1.17-1.02-1.5-.03-.2-.13-.41-.22-.63
+        .92-.1 1.89-.46 1.89-2.04 0-.44-.15-1-.41-1.41 0 0-.33-.11-1.08.42-.75-.53-1.58-.55-2.34-.05
+        -.76-.5-1.58-.24-2.18.63-.6-.87-1.93-.7-2.48-.06-.56-.01-1.25.28-1.58C2.2 4.24 3.6 5.2 5 5.9
+        c-.73.39-1.95 1.27-1.95 2.92 0 1.68 1.2 2.98 2.8 3.24-.29.08-.6.25-.9.5-.25.2-.52.28-.84.28-.32 0-.64-.07-.92-.2
+        .64 1.99 2.67 3.43 5.02 3.48A8 8 0 0 0 8 0z"/>
+    </svg>
+    Made by Aw Wen/Tira-tw
+  </a>
+
+  <script>
+    // 只保留一組偏移量 Money
+    const offsets = [
+      { offset: 126388, label: "Money" }
+    ];
+
+    let fileBuffer = null;
+    let originalName = "svdt_modified.sav";
+
+    // 多語言文字
+    const texts = {
+      en: {
+        title: "Hyrule Warriors Age of Calamity -  Save Editor BETA",
+        subtitle: "Custom Save Modifier",
+        noFile: "No file selected.",
+        item: "Item",
+        current: "Current",
+        modify: "Modify",
+        money: "Money",
+        download: "Download Modified Save",
+        loaded: (name) => `Loaded: ${name}`,
+        drop: "Please search for the svdt save file and click 「選擇檔案」to select it."
+      },
+      zh: {
+        title: "災厄啟示錄 - 存檔修改器測試版",
+        subtitle: "自訂存檔工具",
+        noFile: "尚未選擇檔案",
+        item: "項目",
+        current: "目前數值",
+        modify: "修改後",
+        money: "金錢",
+        download: "下載修改後存檔",
+        loaded: (name) => `已載入檔案：${name}`,
+        drop: "請尋找svdt存檔點選「選擇檔案」以選取。"
+      }
+    };
+
+    let currentLang = "en";
+
+    // DOM 元件
+    const langSelect = document.getElementById("langSelect");
+    const statusEl = document.getElementById("status");
+    const fileInput = document.getElementById("fileInput");
+    const browseBtn = document.getElementById("browseBtn");
+    const dataTable = document.getElementById("dataTable");
+    const tableBody = document.getElementById("tableBody");
+    const saveBtn = document.getElementById("saveBtn");
+
+    // 更新介面語言與文字
+    function updateLanguage() {
+      const t = texts[currentLang];
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("subtitle").textContent = t.subtitle;
+      // 自訂狀態文字
+      statusEl.textContent = t.noFile;
+      // 表格欄位文字
+      document.getElementById("colItem").textContent = t.item;
+      document.getElementById("colCurrent").textContent = t.current;
+      document.getElementById("colNew").textContent = t.modify;
+      // CTA 文字
+      saveBtn.textContent = t.download;
+      // Drop 區提示
+      const dropZone = document.getElementById("dropZone");
+      dropZone.textContent = t.drop;
+    }
+
+    // 將 offset rows 動態產生到表格
+    function buildTableRows() {
+      tableBody.innerHTML = "";
+      offsets.forEach((off, idx) => {
+        const tr = document.createElement("tr");
+
+        const tdLabel = document.createElement("td");
+        tdLabel.textContent = off.label || "Money";
+
+        const tdCurrent = document.createElement("td");
+        tdCurrent.textContent = "?";
+        tdCurrent.className = "currentValue";
+        tdCurrent.dataset.index = idx;
+
+        const tdModify = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "4294967295";
+        input.step = "1";
+        input.className = "modifyInput";
+        input.dataset.index = idx;
+        tdModify.appendChild(input);
+
+        tr.appendChild(tdLabel);
+        tr.appendChild(tdCurrent);
+        tr.appendChild(tdModify);
+
+        tableBody.appendChild(tr);
+      });
+      dataTable.style.display = "table";
+    }
+
+    // 讀取檔案，填入 UI
+    async function loadFileObject(file) {
+      if (!file) return;
+
+      originalName = file.name || "svdt_modified.sav";
+
+      const arrayBuffer = await file.arrayBuffer();
+      fileBuffer = new Uint8Array(arrayBuffer);
+
+      const dv = new DataView(arrayBuffer);
+
+      // 只有 Money 一組
+      const idx = 0;
+      let val = 0;
+      try {
+        val = dv.getUint32(offsets[idx].offset, true);
+      } catch {
+        val = null;
+      }
+      // 更新表格的 Current 值
+      const currentCell = document.querySelector(`td.currentValue[data-index="${idx}"]`);
+      if (currentCell) currentCell.textContent = (val !== null ? val : "?");
+
+      // 將可修改欄位的 placeholder 設成當前值
+      const input = document.querySelector(`input.modifyInput[data-index="${idx}"]`);
+      if (input) input.placeholder = (val !== null && val !== undefined) ? val : "";
+
+      // 顯示表格與啟用下載
+      saveBtn.disabled = false;
+      statusEl.textContent = texts[currentLang].loaded(file.name);
+    }
+
+    // 自訂按鈕觸發檔案選取
+    browseBtn.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    // 檔案選取變更
+    fileInput.addEventListener("change", async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) {
+        statusEl.textContent = texts[currentLang].noFile;
+        return;
+      }
+      await loadFileObject(f);
+    });
+
+    // Drag-and-drop 支援
+    const dropZone = document.getElementById("dropZone");
+    ["dragover", "dragenter"].forEach((evt) => {
+      dropZone.addEventListener(evt, (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        dropZone.style.opacity = "0.9";
+      });
+    });
+    ["dragleave", "drop"].forEach((evt) => {
+      dropZone.addEventListener(evt, (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        dropZone.style.opacity = "1.0";
+      });
+    });
+    dropZone.addEventListener("drop", async (ev) => {
+      const f = ev.dataTransfer?.files?.[0];
+      if (f) {
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        fileInput.files = dt.files;
+        await loadFileObject(f);
+      }
+    });
+
+    // 下載：寫回新值並下載檔案
+    saveBtn.addEventListener("click", () => {
+      if (!fileBuffer) return;
+
+      const dv = new DataView(fileBuffer.buffer);
+
+      // 只有 Money
+      const idx = 0;
+      const input = document.querySelector(`input.modifyInput[data-index="${idx}"]`);
+      let newVal = null;
+
+      const currentVal = dv.getUint32(offsets[idx].offset, true);
+      if (input && input.value !== "") {
+        newVal = Number(input.value);
+        if (Number.isNaN(newVal)) newVal = currentVal;
+      } else {
+        newVal = currentVal;
+      }
+      // clamp
+      if (newVal < 0) newVal = 0;
+      if (newVal > 0xFFFFFFFF) newVal = 0xFFFFFFFF;
+      dv.setUint32(offsets[idx].offset, newVal >>> 0, true);
+
+      const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+
+      // 保留原始副檔名，檔名附加 _modified
+      let base = originalName.replace(/\.[^.]+$/, "");
+      let ext = originalName.split('.').pop() || "sav";
+      const outName = base + "_modified." + ext;
+
+      a.download = outName;
+      a.click();
+    });
+
+    // 初始語言與 UI 設定
+    updateLanguage();
+    buildTableRows();
+    // 設定預設語言的選項
+    langSelect.value = currentLang;
+
+    // 語言切換事件
+    langSelect.addEventListener("change", (e) => {
+      currentLang = e.target.value;
+      updateLanguage();
+    });
+
+    // 初始化：若使用者已載入檔案，狀態文字會在 loadFileObject 內更新
+  </script>
+</body>
+</html>
