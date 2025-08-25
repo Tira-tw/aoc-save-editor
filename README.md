@@ -1,4 +1,6 @@
 # AOC Save Editor
+[gbatemp](https://gbatemp.net/threads/wip-beta-aoc-zelda-age-of-calamity-save-editor-money-editing-tools-demo.674649/)
+
 
 Test Version / 測試版說明
 
